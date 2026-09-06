@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pet Health Companion</title>
+<style>
+  :root{
+    --ink:#2b2420;
+    --paper:#f3ede3;
+    --panel:#fffdf8;
+    --line:#e0d4bd;
+    --accent:#c1662f;
+    --accent-dark:#9c4e21;
+    --teal:#3f6f66;
+    --user-bubble:#c1662f;
+    --bot-bubble:#f6efe1;
+    --danger:#a9432f;
+    --font-head: "Georgia", "Iowan Old Style", serif;
+    --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper);
+    font-family: var(--font-body);
+    color: var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+
+  .app{
+    width:100%;
+    max-width: 760px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(43,36,32,0.08);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    max-height: 90vh;
+  }
+
+  header{
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  header h1{
+    font-family: var(--font-head);
+    font-size: 1.6rem;
+    margin:0;
+    font-weight: normal;
+    color: var(--accent-dark);
+  }
+
+  header p{
+    margin: 6px 0 0;
+    font-size: 0.88rem;
+    color: #7a6f61;
+  }
+
+  .setup{
+    padding: 14px 26px;
+    border-bottom: 1px solid var(--line);
+    background: #fbf6ec;
+    font-size: 0.85rem;
+    display:flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items:center;
+  }
+
+  .setup input[type="password"]{
+    flex: 1 1 220px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+  }
+
+  .setup .status{ font-size: 0.78rem; color: var(--teal); }
+  .setup .status.off{ color: var(--danger); }
+
+  .intake{
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+  }
+
+  .field-row{
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pet-type-btn{
+    flex: 1 1 100px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    text-align:center;
+  }
+
+  .pet-type-btn.selected{
+    border-color: var(--accent);
+    background: #fdece0;
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  .intake label{
+    display:block;
+    font-size: 0.8rem;
+    color: #7a6f61;
+    margin-bottom: 4px;
+  }
+
+  .intake input[type="text"], .intake input[type="number"], .intake textarea{
+    width:100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    resize: vertical;
+  }
+
+  .two-col{ display:flex; gap: 12px; }
+  .two-col > div{ flex:1; }
+
+  #analyzeBtn{
+    align-self:flex-start;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 0.92rem;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  #analyzeBtn:hover{ background: #2e544d; }
+  #analyzeBtn:disabled{ background: #b6c4c0; cursor: not-allowed; }
+
+  #chat{
+    flex:1;
+    overflow-y:auto;
+    padding: 20px 26px;
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+    min-height: 160px;
+  }
+
+  .msg{
+    max-width: 85%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    line-height: 1.5;
+    font-size: 0.94rem;
+    white-space: pre-wrap;
+  }
+
+  .msg.user{
+    align-self:flex-end;
+    background: var(--user-bubble);
+    color: #fff;
+    border-bottom-right-radius: 2px;
+  }
+
+  .msg.bot{
+    align-self:flex-start;
+    background: var(--bot-bubble);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 2px;
+  }
+
+  .msg.error{
+    align-self:flex-start;
+    background: #fbecea;
+    border: 1px solid #e3b7ab;
+    color: var(--danger);
+  }
+
+  .msg.typing{
+    align-self:flex-start;
+    background: var(--bot-bubble);
+    border: 1px solid var(--line);
+    color: #7a6f61;
+    font-style: italic;
+  }
+
+  .disclaimer{
+    font-size: 0.75rem;
+    color: #8a7f70;
+    padding: 8px 26px;
+    border-top: 1px solid var(--line);
+    background: #fbf6ec;
+  }
+
+  form#composer{
+    display:flex;
+    gap: 10px;
+    padding: 14px 26px 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  #userInput{
+    flex:1;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    font-size: 0.92rem;
+    font-family: var(--font-body);
+    resize: none;
+  }
+
+  button[type="submit"]{
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0 20px;
+    font-size: 0.92rem;
+    cursor: pointer;
+  }
+
+  button[type="submit"]:hover{ background: var(--accent-dark); }
+  button[type="submit"]:disabled{ background: #dcb99e; cursor: not-allowed; }
+
+  #chat::-webkit-scrollbar{ width: 8px; }
+  #chat::-webkit-scrollbar-thumb{ background: var(--line); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Pet Health Companion</h1>
+    <p>Select your pet, describe what you're noticing, and get guidance on possible conditions and care.</p>
+  </header>
+
+  <div class="setup">
+    <label for="apiKey">Google AI Studio API key:</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off" />
+    <span class="status off" id="keyStatus">not set</span>
+  </div>
+
+  <div class="intake">
+    <div>
+      <label>Pet type</label>
+      <div class="field-row" id="petTypeRow">
+        <button type="button" class="pet-type-btn" data-type="Dog">🐕 Dog</button>
+        <button type="button" class="pet-type-btn" data-type="Cat">🐈 Cat</button>
+        <button type="button" class="pet-type-btn" data-type="Bird">🐦 Bird</button>
+        <button type="button" class="pet-type-btn" data-type="Rabbit">🐇 Rabbit</button>
+        <button type="button" class="pet-type-btn" data-type="Other">🐾 Other</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <label for="breed">Breed (optional)</label>
+        <input type="text" id="breed" placeholder="e.g. Labrador, Persian, mixed" />
+      </div>
+      <div>
+        <label for="age">Age (optional)</label>
+        <input type="text" id="age" placeholder="e.g. 2 years, 6 months" />
+      </div>
+    </div>
+
+    <div>
+      <label for="symptoms">Symptoms you're noticing</label>
+      <textarea id="symptoms" rows="3" placeholder="e.g. scratching a lot, loss of appetite for 2 days, limping on the front leg..."></textarea>
+    </div>
+
+    <button id="analyzeBtn">Analyze symptoms</button>
+  </div>
+
+  <div id="chat">
+    <div class="msg bot">Hi! I'm your Pet Health Companion. Pick your pet type above, describe the symptoms, and I'll suggest possible causes, a care routine, and things to watch for.</div>
+  </div>
+
+  <form id="composer">
+    <textarea id="userInput" rows="1" placeholder="Ask a follow-up question..." required></textarea>
+    <button type="submit" id="sendBtn">Send</button>
+  </form>
+
+  <div class="disclaimer">
+    Not a substitute for veterinary care. If symptoms are severe or sudden (difficulty breathing, collapse, bleeding, suspected poisoning), contact a vet immediately.
+  </div>
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+  const form = document.getElementById('composer');
+  const input = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const apiKeyInput = document.getElementById('apiKey');
+  const keyStatus = document.getElementById('keyStatus');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const breedInput = document.getElementById('breed');
+  const ageInput = document.getElementById('age');
+  const symptomsInput = document.getElementById('symptoms');
+
+  let selectedType = null;
+  let history = []; // Gemini-format: {role: 'user'|'model', parts:[{text}]}
+
+  const SYSTEM_PROMPT = `You are Pet Health Companion, an assistant that helps pet owners understand possible causes of symptoms they observe in their pet, and how to care for their pet going forward.
+
+For every response about a pet's symptoms, structure your answer in this order using short headings:
+1. Possible conditions — a short list of what these symptoms could indicate, from most to less likely. Never state a definitive diagnosis.
+2. Immediate care — simple, safe things the owner can do right now.
+3. Care routine — an ongoing routine (diet, activity, grooming, monitoring) suited to this pet's type, breed, and age if given.
+4. Diseases/issues to watch for — conditions this type/breed/age of pet commonly develops later, so the owner knows early warning signs.
+
+Rules:
+- Always include a brief, clear reminder that a licensed veterinarian should examine the pet for an actual diagnosis, especially if symptoms are severe, worsening, or the pet is very young/old.
+- If the described symptoms sound urgent or severe (e.g. difficulty breathing, repeated vomiting, suspected poisoning, collapse, heavy bleeding), say clearly that the owner should contact a vet or emergency animal clinic immediately, before anything else.
+- Keep language simple, warm, and non-alarming, like a knowledgeable friend.
+- Keep each section short (a few lines or bullet points), not long essays.`;
+
+  document.querySelectorAll('.pet-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pet-type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedType = btn.dataset.type;
+    });
+  });
+
+  apiKeyInput.addEventListener('input', () => {
+    if (apiKeyInput.value.trim().length > 0) {
+      keyStatus.textContent = 'key set for this session';
+      keyStatus.classList.remove('off');
+    } else {
+      keyStatus.textContent = 'not set';
+      keyStatus.classList.add('off');
+    }
+  });
+
+  function addMessage(text, role){
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  async function sendToGemini(userText, apiKey){
+    history.push({ role: 'user', parts: [{ text: userText }] });
+    const typingBubble = addMessage('Thinking...', 'typing');
+
+    try {
+      const GEMINI_MODEL = 'gemini-3.6-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: history,
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+        })
+      });
+
+      const data = await response.json();
+      typingBubble.remove();
+
+      if (!response.ok) {
+        const message = (data && data.error && data.error.message) || 'Request failed.';
+        addMessage('Error: ' + message, 'error');
+        history.pop();
+        return;
+      }
+
+      const reply = data.candidates &&
+        data.candidates[0] &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts &&
+        data.candidates[0].content.parts[0] &&
+        data.candidates[0].content.parts[0].text
+        ? data.candidates[0].content.parts[0].text
+        : '(no reply text returned)';
+
+      addMessage(reply, 'bot');
+      history.push({ role: 'model', parts: [{ text: reply }] });
+
+    } catch (err) {
+      typingBubble.remove();
+      addMessage('Network error: ' + err.message, 'error');
+      history.pop();
+    }
+  }
+
+  analyzeBtn.addEventListener('click', async () => {
+    const apiKey = apiKeyInput.value.trim();
+    const symptoms = symptomsInput.value.trim();
+
+    if (!apiKey) { addMessage('Please paste your Google AI Studio API key first.', 'error'); return; }
+    if (!selectedType) { addMessage('Please select a pet type first.', 'error'); return; }
+    if (!symptoms) { addMessage('Please describe the symptoms you\'re noticing.', 'error'); return; }
+
+    const breed = breedInput.value.trim();
+    const age = ageInput.value.trim();
+
+    let summary = `Pet type: ${selectedType}`;
+    if (breed) summary += `, breed: ${breed}`;
+    if (age) summary += `, age: ${age}`;
+    summary += `. Symptoms: ${symptoms}`;
+
+    addMessage(summary, 'user');
+    analyzeBtn.disabled = true;
+    sendBtn.disabled = true;
+    await sendToGemini(summary, apiKey);
+    analyzeBtn.disabled = false;
+    sendBtn.disabled = false;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    const apiKey = apiKeyInput.value.trim();
+
+    if (!text) return;
+    if (!apiKey) { addMessage('Please paste your API key above first.', 'error'); return; }
+
+    addMessage(text, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+    analyzeBtn.disabled = true;
+    await sendToGemini(text, apiKey);
+    sendBtn.disabled = false;
+    analyzeBtn.disabled = false;
+    input.focus();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+</script>
+
+</body>
+</html>
